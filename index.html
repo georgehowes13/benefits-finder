@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benefits Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--gold: #A8D4F5;
+--gold-light: #C8E6FF;
+--gold-pale: rgba(168,212,245,0.13);
+--gold-border: rgba(168,212,245,0.30);
+--navy: #003865;
+--navy-mid: #004f8a;
+--navy-dark: #001e38;
+--navy-deep: #000e1c;
+--white: #FFFFFF;
+--muted: rgba(255,255,255,0.48);
+--muted2: rgba(255,255,255,0.22);
+--surface: rgba(255,255,255,0.042);
+--surface-h: rgba(255,255,255,0.075);
+--border: rgba(255,255,255,0.085);
+--fi-col: #A8D4F5;
+--lf-col: #B8A9E8;
+--sf-col: #A8D4F5;
+--ic-col: #A8D4F5;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+height: 100%;
+font-family: 'Outfit', sans-serif;
+background: var(--navy-deep);
+color: var(--white);
+overflow: hidden;
+}
+
+.bg {
+position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+.bg::before {
+content: '';
+position: absolute; inset: 0;
+background:
+radial-gradient(ellipse 90% 60% at 5% 5%, rgba(0,56,101,0.85) 0%, transparent 55%),
+radial-gradient(ellipse 60% 80% at 95% 95%, rgba(168,212,245,0.05) 0%, transparent 55%),
+linear-gradient(170deg, #001e38 0%, #000e1c 100%);
+}
+.bg::after {
+content: '';
+position: absolute; inset: 0;
+background-image: repeating-linear-gradient(
+-45deg,
+transparent 0px, transparent 28px,
+rgba(255,255,255,0.012) 28px, rgba(255,255,255,0.012) 29px
+);
+}
+.bg-orb {
+position: absolute;
+border-radius: 50%;
+filter: blur(90px);
+animation: orbDrift 14s ease-in-out infinite;
+}
+.orb1 {
+width: 560px; height: 560px;
+background: radial-gradient(circle, rgba(168,212,245,0.08), transparent 68%);
+top: -160px; right: -140px;
+}
+.orb2 {
+width: 420px; height: 420px;
+background: radial-gradient(circle, rgba(0,79,138,0.28), transparent 68%);
+bottom: -100px; left: -100px;
+animation-delay: -7s;
+}
+@keyframes orbDrift {
+0%,100% { transform: translate(0,0) scale(1); }
+50% { transform: translate(18px,-18px) scale(1.04); }
+}
+
+.stage {
+position: relative; z-index: 1;
+height: 100vh;
+display: flex; align-items: center; justify-content: center;
+padding: 20px;
+}
+
+.panel {
+width: 100%; max-width: 700px;
+max-height: 96vh;
+overflow-y: auto;
+scrollbar-width: none;
+}
+.panel::-webkit-scrollbar { display: none; }
+
+.screen { display: none; }
+.screen.active {
+display: block;
+animation: screenIn 0.52s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes screenIn {
+from { opacity:0; transform: translateY(22px) scale(0.985); }
+to { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.card {
+background: rgba(0,24,52,0.6);
+border: 1px solid var(--border);
+border-radius: 26px;
+padding: 50px 54px;
+backdrop-filter: blur(22px);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,0.06),
+0 40px 90px rgba(0,0,0,0.55),
+0 0 0 1px rgba(168,212,245,0.03);
+}
+
+/* ── SPLASH ── */
+.eyebrow {
+display: inline-flex; align-items: center; gap: 10px;
+font-size: 10px; font-weight: 700;
+letter-spacing: 3px; text-transform: uppercase;
+color: var(--gold); margin-bottom: 22px;
+}
+.eyebrow-line {
+display: block; width: 30px; height: 2px;
+background: var(--gold); border-radius: 2px;
+}
+
+.splash-title {
+font-family: 'Cormorant Garamond', serif;
+font-size: clamp(44px, 7vw, 68px);
+font-weight: 700;
+line-height: 1.0;
+color: var(--white);
+letter-spacing: -0.5px;
+margin-bottom: 18px;
+}
+.splash-title em { font-style: italic; color: var(--gold); }
+
+.splash-sub {
+font-size: 15px; font-weight: 400;
+color: var(--muted); line-height: 1.7;
+max-width: 430px; margin-bottom: 40px;
+}
+
+.result-preview {
+display: flex; gap: 10px; flex-wrap: wrap;
+margin-bottom: 44px;
+}
+.rp-chip {
+display: flex; align-items: center; gap: 8px;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 100px;
+padding: 8px 16px;
+font-size: 13px; font-weight: 500;
+color: rgba(255,255,255,0.65);
+}
+.rp-dot {
+width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.btn-primary {
+display: inline-flex; align-items: center; gap: 10px;
+background: var(--gold);
+color: var(--navy-dark);
+font-family: 'Outfit', sans-serif;
+font-size: 16px; font-weight: 700;
+padding: 16px 38px;
+border-radius: 100px; border: none;
+cursor: pointer;
+transition: all 0.22s ease;
+}
+.btn-primary:hover {
+background: var(--gold-light);
+transform: translateY(-3px);
+box-shadow: 0 14px 36px rgba(168,212,245,0.25);
+}
+.btn-primary svg { width:17px; height:17px; transition: transform 0.2s; }
+.btn-primary:hover svg { transform: translateX(3px); }
+
+/* ── QUESTION ── */
+.q-meta {
+display: flex; align-items: center; justify-content: space-between;
+margin-bottom: 18px;
+}
+.q-label {
+font-size: 10px; font-weight: 700;
+letter-spacing: 2.5px; text-transform: uppercase;
+color: var(--gold);
+}
+.q-dots { display: flex; gap: 7px; align-items: center; }
+.qdot {
+width: 7px; height: 7px; border-radius: 50%;
+background: var(--muted2);
+transition: all 0.3s ease; flex-shrink: 0;
+}
+.qdot.done { background: var(--gold); opacity: 0.5; }
+.qdot.active {
+background: var(--gold);
+width: 22px; border-radius: 4px;
+box-shadow: 0 0 8px rgba(168,212,245,0.55);
+}
+
+.prog-track {
+height: 3px;
+background: rgba(255,255,255,0.07);
+border-radius: 3px;
+margin-bottom: 34px; overflow: hidden;
+}
+.prog-fill {
+height: 100%;
+background: linear-gradient(90deg, var(--gold), var(--gold-light));
+border-radius: 3px;
+transition: width 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+
+.q-text {
+font-family: 'Cormorant Garamond', serif;
+font-size: clamp(22px, 4vw, 30px);
+font-weight: 600;
+color: var(--white);
+line-height: 1.25;
+margin-bottom: 30px;
+letter-spacing: -0.2px;
+}
+
+.options { display: grid; gap: 10px; }
+
+.opt {
+display: flex; align-items: center; gap: 16px;
+width: 100%;
+background: var(--surface);
+border: 1.5px solid var(--border);
+border-radius: 14px;
+padding: 16px 20px;
+cursor: pointer;
+transition: all 0.2s ease;
+text-align: left;
+color: var(--white);
+font-family: 'Outfit', sans-serif;
+font-size: 15px; font-weight: 500;
+line-height: 1.4;
+}
+.opt:hover:not(:disabled) {
+background: var(--surface-h);
+border-color: var(--gold-border);
+transform: translateX(5px);
+}
+.opt:disabled { cursor: default; }
+.opt.chosen {
+background: var(--gold-pale);
+border-color: var(--gold);
+}
+.opt.chosen .opt-icon { background: var(--gold); }
+
+.opt-icon {
+flex-shrink: 0;
+font-size: 20px;
+width: 42px; height: 42px;
+border-radius: 10px;
+background: rgba(255,255,255,0.06);
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s ease;
+}
+
+/* ── RESULTS ── */
+.result-badge {
+display: inline-flex; align-items: center; gap: 10px;
+border-radius: 100px;
+padding: 8px 20px;
+font-size: 11px; font-weight: 700;
+letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 24px;
+border: 1px solid;
+}
+.result-badge.fi { background: rgba(168,212,245,0.12); border-color: rgba(168,212,245,0.35); color: var(--fi-col); }
+.result-badge.lf { background: rgba(184,169,232,0.12); border-color: rgba(184,169,232,0.35); color: var(--lf-col); }
+.result-badge.sf { background: rgba(168,212,245,0.12); border-color: rgba(168,212,245,0.35); color: var(--sf-col); }
+.result-badge.ic { background: rgba(168,212,245,0.12); border-color: rgba(168,212,245,0.35); color: var(--ic-col); }
+
+.result-title {
+font-family: 'Cormorant Garamond', serif;
+font-size: clamp(36px, 5.5vw, 54px);
+font-weight: 700; line-height: 1.05;
+color: var(--white); margin-bottom: 16px;
+}
+.result-title em { font-style: italic; }
+.result-title.fi em { color: var(--fi-col); }
+.result-title.lf em { color: var(--lf-col); }
+.result-title.sf em { color: var(--sf-col); }
+.result-title.ic em { color: var(--ic-col); }
+
+.result-why {
+font-size: 15px; color: var(--muted);
+line-height: 1.7; max-width: 520px;
+margin-bottom: 36px;
+}
+
+.pros-label {
+font-size: 10px; font-weight: 700;
+letter-spacing: 2.5px; text-transform: uppercase;
+color: var(--muted); margin-bottom: 14px;
+}
+.pros-grid {
+display: grid; grid-template-columns: 1fr 1fr;
+gap: 10px; margin-bottom: 32px;
+}
+.pro-item {
+display: flex; align-items: flex-start; gap: 12px;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 13px;
+padding: 14px 16px;
+}
+.pro-icon {
+flex-shrink: 0; font-size: 18px;
+width: 34px; height: 34px;
+border-radius: 9px;
+display: flex; align-items: center; justify-content: center;
+}
+.pro-icon.fi { background: rgba(168,212,245,0.12); }
+.pro-icon.lf { background: rgba(184,169,232,0.12); }
+.pro-icon.sf { background: rgba(168,212,245,0.12); }
+.pro-icon.ic { background: rgba(168,212,245,0.12); }
+.pro-text { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); line-height: 1.4; }
+
+.divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+.cta-box {
+background: linear-gradient(135deg, var(--gold-pale), rgba(0,56,101,0.25));
+border: 1px solid var(--gold-border);
+border-radius: 18px;
+padding: 26px 30px;
+margin-bottom: 28px;
+}
+.cta-box p { font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.82); }
+.cta-box strong { color: var(--gold); font-weight: 700; }
+
+.result-actions { display: flex; justify-content: center; }
+
+.btn-ghost {
+display: inline-flex; align-items: center; gap: 10px;
+background: transparent;
+border: 1.5px solid var(--gold-border);
+color: var(--gold);
+font-family: 'Outfit', sans-serif;
+font-size: 14px; font-weight: 600;
+padding: 13px 28px;
+border-radius: 100px; cursor: pointer;
+transition: all 0.2s ease;
+}
+.btn-ghost:hover { background: var(--gold-pale); border-color: var(--gold); }
+.btn-ghost svg { width:15px; height:15px; }
+</style>
+
+</head>
+<body>
+
+<div class="bg">
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+</div>
+
+<div class="stage">
+<div class="panel">
+
+<!-- SPLASH -->
+
+<div class="screen active" id="screen-splash">
+<div class="card">
+<div class="eyebrow"><span class="eyebrow-line"></span>Employee Benefits · 2025</div>
+<h1 class="splash-title">Which Benefits<br>Model Is <em>Right</em><br>for You?</h1>
+<p class="splash-sub">Health care costs have risen over 40% in the past five years — and are projected to climb 7–9% annually. Answer 8 questions and we'll match you to the plan model that fits your business best.</p>
+<div class="result-preview">
+<div class="rp-chip"><span class="rp-dot" style="background:var(--fi-col)"></span>Fully Insured</div>
+<div class="rp-chip"><span class="rp-dot" style="background:var(--lf-col)"></span>Level Funding</div>
+<div class="rp-chip"><span class="rp-dot" style="background:var(--sf-col)"></span>Self-Funded</div>
+<div class="rp-chip"><span class="rp-dot" style="background:var(--ic-col)"></span>ICHRA</div>
+</div>
+<button class="btn-primary" onclick="startQuiz()">
+Find My Match
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+</svg>
+</button>
+</div>
+</div>
+
+<!-- QUESTION -->
+
+<div class="screen" id="screen-question">
+<div class="card">
+<div class="q-meta">
+<div class="q-label" id="q-label">Question 1 of 8</div>
+<div class="q-dots" id="q-dots"></div>
+</div>
+<div class="prog-track">
+<div class="prog-fill" id="prog-fill" style="width:0%"></div>
+</div>
+<div class="q-text" id="q-text"></div>
+<div class="options" id="options"></div>
+</div>
+</div>
+
+<!-- RESULTS -->
+
+<div class="screen" id="screen-results">
+<div class="card" id="results-card"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+const QUESTIONS = [
+{
+text: "What is your company's size?",
+options: [
+{ icon: '👤', label: "Fewer than 50 employees", bucket: 'A' },
+{ icon: '👥', label: "50 – 100 employees", bucket: 'B' },
+{ icon: '🏢', label: "100 – 500 employees", bucket: 'C' },
+{ icon: '🏙️', label: "500+ employees", bucket: 'D' },
+]
+},
+{
+text: "How much financial risk is your company willing to take on for employee health care costs?",
+options: [
+{ icon: '🔒', label: "Low — we're willing to pay a higher premium for a predictable, fixed cost", bucket: 'A' },
+{ icon: '⚖️', label: "Moderate — we're willing to pay higher costs if there is potential for a premium refund", bucket: 'B' },
+{ icon: '💪', label: "High — we're comfortable paying our health plan claims and confident in managing our own risk", bucket: 'C' },
+{ icon: '🚫', label: "None — we prefer a plan based solely on age, family size, and area of residence to determine premiums", bucket: 'D' },
+]
+},
+{
+text: "How important is flexibility in tailoring health care benefits for your employees?",
+options: [
+{ icon: '📋', label: "Not very important — we prefer a straightforward, one-size-fits-all plan", bucket: 'A' },
+{ icon: '🔧', label: "Somewhat important — we'd like some customization options", bucket: 'B' },
+{ icon: '🎛️', label: "Very important — we want to create tailored solutions for our employees", bucket: 'C' },
+{ icon: '🧩', label: "Extremely important — we want employees to choose their own plans", bucket: 'D' },
+]
+},
+{
+text: "What is your company's approach to budgeting for health care costs?",
+options: [
+{ icon: '📌', label: "We need a fixed, predictable monthly premium", bucket: 'A' },
+{ icon: '📈', label: "We're open to variable costs if it means potential savings", bucket: 'B' },
+{ icon: '💼', label: "We're willing to manage our own costs to stabilize expenses", bucket: 'C' },
+{ icon: '💵', label: "We want to set a defined allowance that employees can use to purchase their own health care plans", bucket: 'D' },
+]
+},
+{
+text: "How much control do you want over your health care plan?",
+options: [
+{ icon: '🤲', label: "Low — we prefer the insurance carrier to handle everything", bucket: 'A' },
+{ icon: '🤝', label: "Moderate — we'd like to manage part of the plan but leave the rest to the carrier", bucket: 'B' },
+{ icon: '🎯', label: "High — we want full control over how funds are allocated", bucket: 'C' },
+{ icon: '🙌', label: "None — we want employees to have full control over their own health care choices", bucket: 'D' },
+]
+},
+{
+text: "What do you think your employees value most?",
+options: [
+{ icon: '😌', label: "They don't want to be involved and want the company to choose for them", bucket: 'A' },
+{ icon: '🤔', label: "They want a few options but don't want to think too much about their coverage", bucket: 'B' },
+{ icon: '🏃', label: "They want options and are willing to engage in wellness activities to help keep overall costs low", bucket: 'C' },
+{ icon: '🌟', label: "They want to choose their own plan and have maximum control over carriers, with the ability to highly customize coverage for themselves and their family", bucket: 'D' },
+]
+},
+{
+text: "How comfortable are your employees with utilizing technology?",
+options: [
+{ icon: '❓', label: 'None — "Computer? What\'s a computer?"', bucket: 'A' },
+{ icon: '📧', label: "Low — communicating via email or logging into payroll is routine", bucket: 'B' },
+{ icon: '💻', label: "Moderate — they use computers and multiple forms of communication daily", bucket: 'C' },
+{ icon: '📱', label: "High — they use smartphones in and outside of work", bucket: 'D' },
+]
+},
+{
+text: "How does your company prioritize cost control?",
+options: [
+{ icon: '🌿', label: "Low — we prioritize simplicity over cost savings", bucket: 'A' },
+{ icon: '📊', label: "Moderate — it's important, but we have limited resources to invest in getting the best results", bucket: 'B' },
+{ icon: '🏆', label: "High — cost savings is critical and we're willing to invest time and resources to get the best results", bucket: 'C' },
+{ icon: '🔄', label: "High — cost savings is critical, but we'd prefer employees to manage their own health care", bucket: 'D' },
+]
+}
+];
+
+const RESULTS = {
+A: {
+cls: 'fi',
+titleHtml: 'Your Match: <em>Fully Insured</em>',
+why: "Your company values simplicity, predictability, and minimal risk. A Fully Insured plan offers fixed premiums and straightforward administration, making it ideal for businesses that prefer minimal involvement in managing health care costs.",
+pros: [
+{ icon: '🛡️', text: 'Fixed premiums — predictable costs every month' },
+{ icon: '✅', text: 'Carrier handles compliance and all administration' },
+{ icon: '🏥', text: 'Access to large carrier networks and plan options' },
+{ icon: '🚀', text: 'Simple to implement — minimal HR burden' },
+],
+cta: "Fully Insured plans deliver <strong>simplicity and peace of mind</strong>. Let's walk you through current carrier options and find the right fit for your team."
+},
+B: {
+cls: 'lf',
+titleHtml: 'Your Match: <em>Level Funding</em>',
+why: "Your company is open to taking on some financial risk while maintaining predictable monthly costs. Level Funding is a hybrid approach combining the benefits of self-funding with the stability of fixed monthly payments — and if claims come in lower than expected, you may receive a refund at year-end.",
+pros: [
+{ icon: '📅', text: 'Fixed monthly payments — budget-friendly and stable' },
+{ icon: '💰', text: 'Potential year-end refund if claims are lower than expected' },
+{ icon: '🛡️', text: 'Stop-loss insurance protects against large, unexpected claims' },
+{ icon: '📊', text: 'More claims visibility than a traditional fully insured plan' },
+],
+cta: "Level Funding is one of the <strong>smartest stepping stones</strong> between fully insured and self-funded. Come talk with us about whether your group qualifies."
+},
+C: {
+cls: 'sf',
+titleHtml: 'Your Match: <em>Self-Funded</em>',
+why: "Your company is comfortable managing its own health care plan and values the ability to tailor benefits to meet employee needs. Self-Funding provides the opportunity to stabilize costs while maintaining full control over how funds are allocated.",
+pros: [
+{ icon: '💰', text: 'Pay only for claims used — keep the savings' },
+{ icon: '📊', text: 'Full transparency into your real claims data' },
+{ icon: '🎛️', text: 'Customize plan design to fit your workforce' },
+{ icon: '🔒', text: 'Stop-loss coverage caps exposure on catastrophic claims' },
+],
+cta: "Self-Funded plans can save <strong>10–25% versus fully insured</strong> for the right employer. Come chat about your claims history and whether you're ready to make the move."
+},
+D: {
+cls: 'ic',
+titleHtml: 'Your Match: <em>ICHRA</em>',
+why: "Your company prioritizes flexibility and employee choice. An ICHRA empowers employees to select their own health care plans, with your company reimbursing them for eligible expenses. This is ideal for businesses that want to offer maximum choice and customization for their workforce.",
+pros: [
+{ icon: '🧩', text: 'Employees choose their own coverage — no group plan to manage' },
+{ icon: '💵', text: 'Set a defined allowance — fixed, predictable employer cost' },
+{ icon: '📍', text: 'Works seamlessly across multiple states and remote workers' },
+{ icon: '🤝', text: 'Ideal for part-time, seasonal, or highly varied workforces' },
+],
+cta: "ICHRA is one of the <strong>fastest-growing benefits models</strong> in the market today. Let's talk through how to structure your reimbursement amounts and get your employees enrolled."
+}
+};
+
+let currentQ = 0;
+let buckets = { A:0, B:0, C:0, D:0 };
+let autoReset = null;
+const TOTAL = QUESTIONS.length;
+
+function startQuiz() {
+currentQ = 0;
+buckets = { A:0, B:0, C:0, D:0 };
+showScreen('screen-question');
+renderQuestion();
+}
+
+function renderQuestion() {
+const q = QUESTIONS[currentQ];
+document.getElementById('q-label').textContent = `Question ${currentQ + 1} of ${TOTAL}`;
+document.getElementById('prog-fill').style.width = `${(currentQ / TOTAL) * 100}%`;
+document.getElementById('q-text').textContent = q.text;
+
+const dotsEl = document.getElementById('q-dots');
+dotsEl.innerHTML = '';
+for (let i = 0; i < TOTAL; i++) {
+const d = document.createElement('div');
+d.className = 'qdot' + (i === currentQ ? ' active' : i < currentQ ? ' done' : '');
+dotsEl.appendChild(d);
+}
+
+const optsEl = document.getElementById('options');
+optsEl.innerHTML = '';
+q.options.forEach((opt, i) => {
+const btn = document.createElement('button');
+btn.className = 'opt';
+btn.innerHTML = `<span class="opt-icon">${opt.icon}</span><span>${opt.label}</span>`;
+btn.onclick = () => choose(i, btn);
+optsEl.appendChild(btn);
+});
+}
+
+function choose(index, btn) {
+document.querySelectorAll('.opt').forEach(b => { b.disabled = true; });
+btn.classList.add('chosen');
+
+const bucket = QUESTIONS[currentQ].options[index].bucket;
+buckets[bucket]++;
+
+setTimeout(() => {
+currentQ++;
+if (currentQ >= TOTAL) showResults();
+else renderQuestion();
+}, 380);
+}
+
+function showResults() {
+const winner = Object.entries(buckets).sort((a,b) => b[1]-a[1])[0][0];
+const r = RESULTS[winner];
+
+const prosHtml = r.pros.map(p => `
+<div class="pro-item">
+<div class="pro-icon ${r.cls}">${p.icon}</div>
+<div class="pro-text">${p.text}</div>
+</div>`).join('');
+
+document.getElementById('results-card').innerHTML = `
+<div class="result-badge ${r.cls}">✦ Your Best Match</div>
+<div class="result-title ${r.cls}">${r.titleHtml}</div>
+<p class="result-why">${r.why}</p>
+<div class="pros-label">Why it fits you</div>
+<div class="pros-grid">${prosHtml}</div>
+<div class="divider"></div>
+<div class="cta-box"><p>${r.cta}</p></div>
+<div class="result-actions">
+<button class="btn-ghost" onclick="resetQuiz()">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="23 4 23 10 17 10"/>
+<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+</svg>
+Start Over
+</button>
+</div>
+`;
+
+showScreen('screen-results');
+clearTimeout(autoReset);
+autoReset = setTimeout(resetQuiz, 90000);
+}
+
+function resetQuiz() {
+clearTimeout(autoReset);
+showScreen('screen-splash');
+}
+
+function showScreen(id) {
+document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+</script>
+
+</body>
+</html>
